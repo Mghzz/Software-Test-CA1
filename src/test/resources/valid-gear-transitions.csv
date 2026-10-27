@@ -1,0 +1,9 @@
+fromGear,targetGear,speedKmh
+P,R,0.0
+P,R,4.9
+R,D,0.0
+D,R,0.0
+R,N,0.0
+R,N,35.0
+N,D,0.0
+N,D,35.0
