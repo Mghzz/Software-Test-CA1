@@ -2,6 +2,7 @@ package autopilot.core;
 
 import autopilot.exception.IllegalGearChangeException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+@DisplayName("GearBox Tests")
 class GearBoxTest {
 
     private static final double STOPPED_SPEED_KMH = 0.0;
@@ -34,6 +36,7 @@ class GearBoxTest {
     }
 
     @Test
+    @DisplayName("changeTo() throws exception when target gear is null")
     void changeTo_NullTargetGear_ThrowsNullPointerException() {
         assertThrows(
                 NullPointerException.class,
@@ -41,7 +44,8 @@ class GearBoxTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Gear = {0}")
+    @DisplayName("changeTo() keeps current gear when target gear is the same")
     @EnumSource(GearBox.Gear.class)
     void changeTo_SameTargetGearAsCurrentGear_KeepsCurrentGear(GearBox.Gear gear) {
         transitionToGear(gear);
@@ -52,7 +56,8 @@ class GearBoxTest {
         assertEquals(gear, gearBox.getCurrentGear());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Speed = {0}")
+    @DisplayName("changeTo() throws exception when sensor speed is invalid")
     @ValueSource(doubles = {-0.1, -15.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY})
     void changeTo_InvalidSensorSpeed_ThrowsIllegalArgumentException(double invalidSpeed) {
         currentSpeedKmh = invalidSpeed;
@@ -63,7 +68,8 @@ class GearBoxTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "From={0}, To={1}, Speed={2}km/h")
+    @DisplayName("changeTo() updates current gear for allowed transitions and speeds")
     @CsvFileSource(resources = "/valid-gear-transitions.csv", numLinesToSkip = 1)
     void changeTo_AllowedTransitionAndSpeed_UpdatesCurrentGear(
             GearBox.Gear fromGear,
@@ -78,7 +84,8 @@ class GearBoxTest {
         assertEquals(targetGear, gearBox.getCurrentGear());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "From={0}, To={1}, Speed={2}km/h")
+    @DisplayName("changeTo() throws exception for disallowed transitions or speeds")
     @MethodSource("disallowedGearTransitionsProvider")
     void changeTo_DisallowedTransitionOrSpeed_ThrowsIllegalGearChangeException(
             GearBox.Gear fromGear,

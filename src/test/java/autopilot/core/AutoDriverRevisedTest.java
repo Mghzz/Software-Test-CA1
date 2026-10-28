@@ -5,6 +5,7 @@ import autopilot.sensor.LaneSensor;
 import autopilot.sensor.ObstacleSensor;
 import autopilot.sensor.SpeedSensor;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+@DisplayName("Auto Driver Revised Tests")
 class AutoDriverRevisedTest {
 
     private static final double DEFAULT_SPEED_KMH = 80.0;
@@ -68,13 +70,15 @@ class AutoDriverRevisedTest {
     }
 
     @Test
+    @DisplayName("tick() returns normal hold result when centered in lane with safe distance at target speed")
     void tick_CenteredLaneAndSafeObstacleDistanceAtTargetSpeed_ReturnsNormalHoldResult() {
         AutoDriver.DriveResult result = autoDriver.tick(GearBox.Gear.D);
 
         assertEquals(EXPECTED_NORMAL_HOLD_RESULT, result);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "LaneOffset={0}m, ExpectedSteering={1}°")
+    @DisplayName("tick() returns opposite steering correction angle when lane offset exceeds threshold")
     @CsvSource({
             "1.0,  -45.0",
             "-1.0,  45.0"
@@ -90,7 +94,8 @@ class AutoDriverRevisedTest {
         assertEquals(expectedSteeringAngleDegrees, result.steeringAngleDegrees(), DELTA);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Case #{index}: Sensor failure")
+    @DisplayName("tick() returns safe mode result when a sensor failure occurs")
     @MethodSource("failingSensorsProvider")
     void tick_SensorFailureOccurs_ReturnsSafeModeResult(
             SpeedSensor candidateSpeedSensor,

@@ -1,6 +1,7 @@
 package autopilot.core;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -11,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Brake Controller Tests")
 class BrakeControllerTest {
 
     private static final double MAX_PRESSURE = 100.0;
@@ -29,7 +31,8 @@ class BrakeControllerTest {
         brakeController = new BrakeController();
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Pressure = {0}")
+    @DisplayName("apply() throws exception when requested pressure is invalid")
     @ValueSource(doubles = {-0.1, -50.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY})
     void apply_InvalidRequestedPressure_ThrowsIllegalArgumentException(double invalidPressure) {
         assertThrows(
@@ -38,7 +41,8 @@ class BrakeControllerTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Speed = {0}")
+    @DisplayName("apply() throws exception when speed is invalid")
     @ValueSource(doubles = {-0.1, -30.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY})
     void apply_InvalidSpeed_ThrowsIllegalArgumentException(double invalidSpeed) {
         assertThrows(
@@ -48,6 +52,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("apply() throws exception when gear is null")
     void apply_NullGear_ThrowsNullPointerException() {
         assertThrows(
                 NullPointerException.class,
@@ -56,6 +61,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("apply() throws exception when gearbox is in park")
     void apply_GearInPark_ThrowsIllegalStateException() {
         assertThrows(
                 IllegalStateException.class,
@@ -63,7 +69,8 @@ class BrakeControllerTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Requested={0}, Speed={1}km/h, Gear={2}, Expected={3}")
+    @DisplayName("apply() returns bounded pressure when ABS conditions are not met")
     @CsvSource({
             "0.0,   0.0,  D, 0.0",
             "50.0,  25.0, D, 50.0",
@@ -84,6 +91,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("apply() returns high ABS pulse on first call under ABS conditions")
     void apply_FirstCallUnderAbsConditions_ReturnsHighAbsPulse() {
         double appliedPressure = brakeController.apply(
                 ABS_TRIGGER_PRESSURE,
@@ -95,6 +103,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("apply() alternates to low ABS pulse on second consecutive call under ABS conditions")
     void apply_SecondConsecutiveCallUnderAbsConditions_ReturnsLowAbsPulse() {
         brakeController.apply(ABS_TRIGGER_PRESSURE, ABS_TRIGGER_SPEED_KMH, GearBox.Gear.D);
 
@@ -108,6 +117,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("apply() alternates back to high ABS pulse on third consecutive call under ABS conditions")
     void apply_ThirdConsecutiveCallUnderAbsConditions_ReturnsHighAbsPulse() {
         brakeController.apply(ABS_TRIGGER_PRESSURE, ABS_TRIGGER_SPEED_KMH, GearBox.Gear.D);
         brakeController.apply(ABS_TRIGGER_PRESSURE, ABS_TRIGGER_SPEED_KMH, GearBox.Gear.D);
@@ -122,6 +132,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("apply() resets ABS pulse to high after a non-ABS braking call")
     void apply_AbsConditionsAfterNonAbsCall_ResetsToHighAbsPulse() {
         brakeController.apply(ABS_TRIGGER_PRESSURE, ABS_TRIGGER_SPEED_KMH, GearBox.Gear.D);
         brakeController.apply(NORMAL_PRESSURE, NORMAL_SPEED_KMH, GearBox.Gear.D);
@@ -136,6 +147,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("apply() resets ABS pulse to high after emergency braking")
     void apply_AbsConditionsAfterEmergencyBrake_ResetsToHighAbsPulse() {
         brakeController.apply(ABS_TRIGGER_PRESSURE, ABS_TRIGGER_SPEED_KMH, GearBox.Gear.D);
         brakeController.emergencyBrake(GearBox.Gear.D);
@@ -150,6 +162,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("emergencyBrake() throws exception when gear is null")
     void emergencyBrake_NullGear_ThrowsNullPointerException() {
         assertThrows(
                 NullPointerException.class,
@@ -158,6 +171,7 @@ class BrakeControllerTest {
     }
 
     @Test
+    @DisplayName("emergencyBrake() throws exception when gearbox is in park")
     void emergencyBrake_GearInPark_ThrowsIllegalStateException() {
         assertThrows(
                 IllegalStateException.class,
@@ -165,7 +179,8 @@ class BrakeControllerTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Gear = {0}")
+    @DisplayName("emergencyBrake() sets pressure to maximum for allowed gears")
     @EnumSource(value = GearBox.Gear.class, mode = EnumSource.Mode.EXCLUDE, names = {"P"})
     void emergencyBrake_AllowedGear_SetsMaxPressure(GearBox.Gear allowedGear) {
         brakeController.emergencyBrake(allowedGear);
@@ -173,7 +188,8 @@ class BrakeControllerTest {
         assertEquals(MAX_PRESSURE, brakeController.getPressure(), DELTA);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Gear = {0}")
+    @DisplayName("emergencyBrake() activates warning for allowed gears")
     @EnumSource(value = GearBox.Gear.class, mode = EnumSource.Mode.EXCLUDE, names = {"P"})
     void emergencyBrake_AllowedGear_ActivatesWarning(GearBox.Gear allowedGear) {
         brakeController.emergencyBrake(allowedGear);
